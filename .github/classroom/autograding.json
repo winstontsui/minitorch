@@ -1,0 +1,54 @@
+{
+  "tests": [
+    {
+      "name": "Style",
+      "setup": "python -m venv .venv; . .venv/bin/activate; pip3 install -qr requirements.txt; pip3 install -q pre-commit",
+      "run": ". .venv/bin/activate && pre-commit run --all",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Task 3.1",
+      "setup": "sudo -H pip3 install -qr requirements.txt",
+      "run": "pytest -m task3_1",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Task 3.2",
+      "setup": "sudo -H pip3 install -qr requirements.txt",
+      "run": "pytest -m task3_2",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Task 3.3",
+      "setup": "sudo -H pip3 install -qr requirements.txt",
+      "run": "pytest -m task3_3",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "Task 3.4",
+      "setup": "sudo -H pip3 install -qr requirements.txt",
+      "run": "pytest -m task3_4",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 10
+    }
+  ]
+}
