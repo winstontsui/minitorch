@@ -11,9 +11,9 @@
       "points": 10
     },
     {
-      "name": "Task 3.1",
+      "name": "Task 4.1",
       "setup": "sudo -H pip3 install -qr requirements.txt",
-      "run": "pytest -m task3_1",
+      "run": "pytest -m task4_1",
       "input": "",
       "output": "",
       "comparison": "included",
@@ -21,9 +21,9 @@
       "points": 10
     },
     {
-      "name": "Task 3.2",
+      "name": "Task 4.2",
       "setup": "sudo -H pip3 install -qr requirements.txt",
-      "run": "pytest -m task3_2",
+      "run": "pytest -m task4_2",
       "input": "",
       "output": "",
       "comparison": "included",
@@ -31,9 +31,9 @@
       "points": 10
     },
     {
-      "name": "Task 3.3",
+      "name": "Task 4.3",
       "setup": "sudo -H pip3 install -qr requirements.txt",
-      "run": "pytest -m task3_3",
+      "run": "pytest -m task4_3",
       "input": "",
       "output": "",
       "comparison": "included",
@@ -41,9 +41,9 @@
       "points": 10
     },
     {
-      "name": "Task 3.4",
+      "name": "Task 4.4",
       "setup": "sudo -H pip3 install -qr requirements.txt",
-      "run": "pytest -m task3_4",
+      "run": "pytest -m task4_4",
       "input": "",
       "output": "",
       "comparison": "included",
