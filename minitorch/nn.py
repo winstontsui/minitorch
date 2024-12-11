@@ -68,6 +68,7 @@ def argmax(input: Tensor, dim: int) -> Tensor:
     return input == max_vals
 
 
+
 class Max(Function):
     @staticmethod
     def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
