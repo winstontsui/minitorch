@@ -33,13 +33,27 @@ def test_avg(t: Tensor) -> None:
 def test_max(t: Tensor) -> None:
     # TODO: Implement for Task 4.4.
     out = minitorch.nn.max(t, 0)
-    assert_close(out[0, 0, 0], max([t[i, 0, 0] for i in range(2)]))
+    # assert_close(out[0, 0, 0], max([t[i, 0, 0] for i in range(2)]))
 
-    out = minitorch.nn.max(t, 1)
-    assert_close(out[0, 0, 0], max([t[0, i, 0] for i in range(3)]))
+    # out = minitorch.nn.max(t, 1)
+    # assert_close(out[0, 0, 0], max([t[0, i, 0] for i in range(3)]))
 
-    out = minitorch.nn.max(t, 2)
-    assert_close(out[0, 0, 0], max([t[0, 0, i] for i in range(4)]))
+    # out = minitorch.nn.max(t, 2)
+    # assert_close(out[0, 0, 0], max([t[0, 0, i] for i in range(4)]))
+
+    for ind in out._tensor.indices():
+        exp = max([t[i, ind[1], ind[2]] for i in range(t.shape[0])])
+        assert_close(out[ind], exp)
+
+    out = minitorch.max(t, 1)
+    for ind in out._tensor.indices():
+        exp = max([t[ind[0], i, ind[2]] for i in range(t.shape[1])])
+        assert_close(out[ind], exp)
+
+    out = minitorch.max(t, 2)
+    for ind in out._tensor.indices():
+        exp = max([t[ind[0], ind[1], i] for i in range(t.shape[2])])
+        assert_close(out[ind], exp)
 
     minitorch.grad_check(
         lambda t: minitorch.max(t, 0), t + minitorch.rand(t.shape) * 1e-4
