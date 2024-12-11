@@ -53,7 +53,6 @@ def test_max(t: Tensor) -> None:
     )
 
 
-
 @pytest.mark.task4_4
 @given(tensors(shape=(1, 1, 4, 4)))
 def test_max_pool(t: Tensor) -> None:

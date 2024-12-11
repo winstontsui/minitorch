@@ -304,8 +304,6 @@ def tensor_reduce(
 
             out[o] = acc  # Write the final accumulated value
 
-            
-
     # Compile the function with Numba for parallel execution.
     return njit(_reduce, parallel=True)
 

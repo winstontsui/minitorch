@@ -68,14 +68,12 @@ def argmax(input: Tensor, dim: int) -> Tensor:
     return input == max_vals
 
 
-
 class Max(Function):
     @staticmethod
     def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
         """Forward pass for max."""
         ctx.save_for_backward(input, dim)
         return max_reduce(input, int(dim.item()))
-        
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
@@ -95,6 +93,7 @@ def max(input: Tensor, dim: int) -> Tensor:
     Returns:
     -------
         Tensor: The maximum values along the specified dimension.
+
     """
     return Max.apply(input, input._ensure_tensor(dim))
 
