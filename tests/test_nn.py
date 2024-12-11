@@ -40,7 +40,7 @@ def test_max(tensor: Tensor) -> None:
     tensor += 1  # Offset tensor to ensure all values are positive
 
     # Perform the max reduction along the last dimension (dim=2)
-    reduced_tensor = minitorch.max(tensor, dim=2)
+    reduced_tensor = minitorch.nn.max(tensor, dim=2)
 
     # Validate the max reduction operation for each slice
     for batch_idx in range(reduced_tensor.shape[0]):  # Iterate over batches
