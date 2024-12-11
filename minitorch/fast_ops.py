@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar, Any
 
+from numba import njit as _njit, prange
 import numpy as np
-from numba import prange
-from numba import njit as _njit
 
 from .tensor_data import (
-    MAX_DIMS,
     broadcast_index,
     index_to_position,
     shape_broadcast,
     to_index,
+    MAX_DIMS,
 )
 from .tensor_ops import MapProto, TensorOps
 
@@ -19,7 +18,8 @@ if TYPE_CHECKING:
     from typing import Callable, Optional
 
     from .tensor import Tensor
-    from .tensor_data import Index, Shape, Storage, Strides
+    from .tensor_data import Shape, Storage, Strides
+
 
 # TIP: Use `NUMBA_DISABLE_JIT=1 pytest tests/ -m task3_1` to run these tests without JIT.
 
@@ -30,20 +30,12 @@ Fn = TypeVar("Fn")
 
 
 def njit(fn: Fn, **kwargs: Any) -> Fn:
-    """Wrapper around numba.njit that ensures function inlining.
-
-    Args:
-    ----
-        fn: Function to compile
-        kwargs: Additional arguments for numba.njit
-
-    Returns:
-    -------
-        Compiled function
-
-    """
+    """Decorator for JIT compiling functions with NUMBA."""
     return _njit(inline="always", **kwargs)(fn)  # type: ignore
 
+
+# inv = njit(inv)
+# inv_back  = njit(inv_back)
 
 to_index = njit(to_index)
 index_to_position = njit(index_to_position)
@@ -154,33 +146,34 @@ class FastOps(TensorOps):
 def tensor_map(
     fn: Callable[[float], float],
 ) -> Callable[[Storage, Shape, Strides, Storage, Shape, Strides], None]:
-    """NUMBA low-level tensor_map function. Applies a given function element-wise
-    on the input tensor and stores the results in the output tensor.
+    """NUMBA low_level tensor_map function. See `tensor_ops.py` for description.
 
     Optimizations:
-    * Parallelizes the main loop.
-    * Uses numpy buffers for indexing.
-    * Avoids indexing when strides and shapes are aligned.
+
+    * Main loop in parallel
+    * All indices use numpy buffers
+    * When `out` and `in` are stride-aligned, avoid indexing
 
     Args:
     ----
-        fn: A function mapping floats to floats to be applied element-wise.
+        fn: function mappings floats-to-floats to apply.
 
     Returns:
     -------
-        A tensor map function that can be called with tensor storage, shapes, and strides.
+        Tensor map function.
 
     """
 
     def _map(
-        out: Storage,  # Output tensor storage.
-        out_shape: Shape,  # Shape of the output tensor.
-        out_strides: Strides,  # Strides of the output tensor.
-        in_storage: Storage,  # Input tensor storage.
-        in_shape: Shape,  # Shape of the input tensor.
-        in_strides: Strides,  # Strides of the input tensor.
+        out: Storage,
+        out_shape: Shape,
+        out_strides: Strides,
+        in_storage: Storage,
+        in_shape: Shape,
+        in_strides: Strides,
     ) -> None:
-        # Check if input and output tensors are aligned.
+        # TODO: Implement for Task 3.1.
+        # ASSIGN2.2:
         if (
             (len(in_shape) == len(out_shape))  # Same number of dimensions.
             and (in_shape == out_shape).all()  # Shapes match.
@@ -211,34 +204,34 @@ def tensor_zip(
 ) -> Callable[
     [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides], None
 ]:
-    """NUMBA low-level tensor_zip function. Applies a given binary function element-wise
-    on two input tensors and stores the results in the output tensor.
+    """NUMBA higher-order tensor zip function. See `tensor_ops.py` for description.
 
     Optimizations:
-    * Parallelizes the main loop.
-    * Uses numpy buffers for indexing.
-    * Avoids indexing when strides and shapes are aligned.
+
+    * Main loop in parallel
+    * All indices use numpy buffers
+    * When `out`, `a`, `b` are stride-aligned, avoid indexing
 
     Args:
     ----
-        fn: A function mapping two floats to a float to be applied element-wise.
+        fn: function maps two floats to float to apply.
 
     Returns:
     -------
-        A tensor zip function that can be called with tensor storages, shapes, and strides.
+        Tensor zip function.
 
     """
 
     def _zip(
-        out: Storage,  # Output tensor storage.
-        out_shape: Shape,  # Shape of the output tensor.
-        out_strides: Strides,  # Strides of the output tensor.
-        a_storage: Storage,  # First input tensor storage.
-        a_shape: Shape,  # Shape of the first input tensor.
-        a_strides: Strides,  # Strides of the first input tensor.
-        b_storage: Storage,  # Second input tensor storage.
-        b_shape: Shape,  # Shape of the second input tensor.
-        b_strides: Strides,  # Strides of the second input tensor.
+        out: Storage,
+        out_shape: Shape,
+        out_strides: Strides,
+        a_storage: Storage,
+        a_shape: Shape,
+        a_strides: Strides,
+        b_storage: Storage,
+        b_shape: Shape,
+        b_strides: Strides,
     ) -> None:
         out_size = len(out)  # Total number of elements in the output tensor.
 
@@ -277,52 +270,39 @@ def tensor_zip(
 def tensor_reduce(
     fn: Callable[[float, float], float],
 ) -> Callable[[Storage, Shape, Strides, Storage, Shape, Strides, int], None]:
-    """NUMBA low-level tensor_reduce function. Reduces a tensor along a specified dimension
-    using a binary reduction function.
-
-    Optimizations:
-    * Parallelizes the main loop.
-    * Uses numpy buffers for indexing.
-    * Minimizes inner-loop function calls and variable writes.
-
-    Args:
-    ----
-        fn: A reduction function mapping two floats to a float.
-
-    Returns:
-    -------
-        A tensor reduce function that can be called with tensor storages, shapes, strides, and reduction dimension.
-
-    """
+    """NUMBA higher-order tensor reduce function. Optimized for parallel execution."""
 
     def _reduce(
-        out: Storage,  # Output tensor storage.
-        out_shape: Shape,  # Shape of the output tensor.
-        out_strides: Strides,  # Strides of the output tensor.
-        a_storage: Storage,  # Input tensor storage.
-        a_shape: Shape,  # Shape of the input tensor.
-        a_strides: Strides,  # Strides of the input tensor.
-        reduce_dim: int,  # Dimension along which to reduce.
+        out: Storage,
+        out_shape: Shape,
+        out_strides: Strides,
+        a_storage: Storage,
+        a_shape: Shape,
+        a_strides: Strides,
+        reduce_dim: int,
     ) -> None:
-        reduce_size = a_shape[reduce_dim]  # Size of the reduction dimension.
-
-        # Iterate over all elements in the output tensor.
+        # reduce_size = a_shape[reduce_dim]  # Size of the reduction dimension.
+        # Iterate over all elements in the output tensor in parallel
         for i in prange(len(out)):
-            # Temporary buffer for the output tensor index.
-            out_index: Index = np.zeros(MAX_DIMS, np.int32)
+            out_index = np.empty(MAX_DIMS, np.int32)  # Thread-local index buffer
+            size = a_shape[reduce_dim]  # Size of the reduction dimension
+
             # Convert flat index `i` to multidimensional index.
             to_index(i, out_shape, out_index)
             # Position in the output storage.
             o = index_to_position(out_index, out_strides)
 
-            # Perform reduction along the specified dimension.
-            for s in range(reduce_size):
-                # Update the index for the reduction dimension.
-                out_index[reduce_dim] = s
-                # Position in the input storage.
-                j = index_to_position(out_index, a_strides)
-                # Apply the reduction function.
-                out[o] = fn(out[o], a_storage[j])
+            # Initialize accumulator and compute the initial position in input storage
+            acc = out[o]
+            j = index_to_position(out_index, a_strides)
+            step = a_strides[reduce_dim]
+
+            # Reduce across dimension, update the index for the reduction dimension.
+            for s in range(size):
+                acc = fn(acc, a_storage[j])
+                j += step
+
+            out[o] = acc  # Write the final accumulated value
 
     # Compile the function with Numba for parallel execution.
     return njit(_reduce, parallel=True)
@@ -380,6 +360,7 @@ def _tensor_matrix_multiply(
     #             out[out_index] = sum_value  # Write the result to the output tensor
     a_batch_stride = a_strides[0] if a_shape[0] > 1 else 0
     b_batch_stride = b_strides[0] if b_shape[0] > 1 else 0
+
     for x in prange(out_shape[0]):
         for y in prange(out_shape[1]):
             for z in prange(out_shape[2]):
@@ -395,4 +376,3 @@ def _tensor_matrix_multiply(
 
 
 tensor_matrix_multiply = njit(_tensor_matrix_multiply, parallel=True)
-assert tensor_matrix_multiply is not None
