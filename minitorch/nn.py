@@ -84,7 +84,18 @@ class Max(Function):
 
 
 def max(input: Tensor, dim: int) -> Tensor:
-    """Return the maximum values along the specified dimension."""
+    """Apply max reduction along a specified dimension.
+
+    Args:
+    ----
+        input (Tensor): The input tensor.
+        dim (Optional[int]): The dimension to compute the max over. If None, computes the max over all elements.
+
+    Returns:
+    -------
+        Tensor: The maximum values along the specified dimension.
+
+    """
     return Max.apply(input, input._ensure_tensor(dim))
 
 
