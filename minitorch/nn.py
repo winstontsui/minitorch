@@ -59,7 +59,7 @@ def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     )
 
 
-max_reduce = FastOps.reduce(operators.max, -float("inf"))
+max_reduce = FastOps.reduce(operators.max, -1e9)
 
 
 def argmax(input: Tensor, dim: int) -> Tensor:
