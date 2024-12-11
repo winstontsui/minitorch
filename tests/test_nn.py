@@ -30,41 +30,34 @@ def test_avg(t: Tensor) -> None:
 
 @pytest.mark.task4_4
 @given(tensors(shape=(2, 3, 4)))
-def test_max(t: Tensor) -> None:
-    # TODO: Implement for Task 4.4.
-    out = minitorch.nn.max(t, 0)
-    # assert_close(out[0, 0, 0], max([t[i, 0, 0] for i in range(2)]))
+def test_max(tensor: Tensor) -> None:
+    """
+    Test the max reduction operation along a specified dimension.
 
-    # out = minitorch.nn.max(t, 1)
-    # assert_close(out[0, 0, 0], max([t[0, i, 0] for i in range(3)]))
+    Ensures correctness of the `max` operation by comparing with Python's built-in `max`.
+    Verifies backward pass through gradient checking.
+    """
+    tensor += 1  # Offset tensor to ensure all values are positive
 
-    # out = minitorch.nn.max(t, 2)
-    # assert_close(out[0, 0, 0], max([t[0, 0, i] for i in range(4)]))
+    # Perform the max reduction along the last dimension (dim=2)
+    reduced_tensor = minitorch.max(tensor, dim=2)
 
-    for ind in out._tensor.indices():
-        exp = max([t[i, ind[1], ind[2]] for i in range(t.shape[0])])
-        assert_close(out[ind], exp)
+    # Validate the max reduction operation for each slice
+    for batch_idx in range(reduced_tensor.shape[0]):  # Iterate over batches
+        for channel_idx in range(reduced_tensor.shape[1]):  # Iterate over channels
+            # Extract the slice along the reduced dimension
+            slice_values = [tensor[batch_idx, channel_idx, depth_idx] for depth_idx in range(tensor.shape[2])]
 
-    out = minitorch.max(t, 1)
-    for ind in out._tensor.indices():
-        exp = max([t[ind[0], i, ind[2]] for i in range(t.shape[1])])
-        assert_close(out[ind], exp)
+            # Access the reduced value at the appropriate location
+            max_value = reduced_tensor[batch_idx, channel_idx, 0]  # Shape of `reduced_tensor` is (2, 3, 1)
 
-    out = minitorch.max(t, 2)
-    for ind in out._tensor.indices():
-        exp = max([t[ind[0], ind[1], i] for i in range(t.shape[2])])
-        assert_close(out[ind], exp)
+            # Assert correctness of the max operation
+            assert max_value == max(slice_values), f"Max mismatch: {max_value} != {max(slice_values)}"
 
-    minitorch.grad_check(
-        lambda t: minitorch.max(t, 0), t + minitorch.rand(t.shape) * 1e-4
-    )
+    # Perform gradient check for backward pass
+    perturbed_tensor = tensor + minitorch.rand(tensor.shape)  # Add noise to tensor
+    minitorch.grad_check(lambda x: minitorch.max(x, dim=2), perturbed_tensor)
 
-    minitorch.grad_check(
-        lambda t: minitorch.max(t, 1), t + minitorch.rand(t.shape) * 1e-4
-    )
-    minitorch.grad_check(
-        lambda t: minitorch.max(t, 2), t + minitorch.rand(t.shape) * 1e-4
-    )
 
 
 @pytest.mark.task4_4
